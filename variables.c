@@ -8,9 +8,9 @@ struct lenv;
 typedef struct lval lval;
 typedef struct lenv lenv;
 
-enum {LVAL_ERR, LVAL_NUM, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR}
+enum {LVAL_ERR, LVAL_NUM, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR};
 
-typedef lval* (*lbuiltin) (lenv*, lval*);
+typedef lval*(*lbuiltin)(lenv*, lval*);
 
 struct lval {
     int type;
@@ -53,6 +53,13 @@ lval* lval_sym(char* s) {
     v->sym = malloc(strlen(s) + 1);
     strcpy(v->sym, s);
     return v;
+}
+
+lval* lval_fun(lbuiltin func) {
+	lval* v = malloc(sizeof(lval));
+	v->type = LVAL_FUN;
+	v->fun = func;
+	return v;
 }
 
 lval* lval_sexpr(void) {
@@ -391,10 +398,10 @@ lval* builtin_def(lenv* e, lval* a) {
 }
 
 void lenv_add_builtin(lenv* e, char* name, lbuiltin func) {
-	lval* k = val_sym(name);
-	lval* v = lval_func(func);
+	lval* k = lval_sym(name);
+	lval* v = lval_fun(func);
 	lenv_put(e, k, v);
-	lval-del(k);
+	lval_del(k);
 	lval_del(v);
 }
 
@@ -488,19 +495,19 @@ lval* lval_read(mpc_ast_t* t) {
 	}
 
 	for (int i = 0; i < t->children_num; i++) {
-		if (strcmp(t-children[i]->contents, "(") == 0) {
+		if (strcmp(t->children[i]->contents, "(") == 0) {
 			continue;
 		}
-		if (strcmp(t-children[i]->contents, ")") == 0) {
+		if (strcmp(t->children[i]->contents, ")") == 0) {
 			continue;
 		}
-		if (strcmp(t-children[i]->contents, "{") == 0) {
+		if (strcmp(t->children[i]->contents, "{") == 0) {
 			continue;
 		}
-		if (strcmp(t-children[i]->contents, "}") == 0) {
+		if (strcmp(t->children[i]->contents, "}") == 0) {
 			continue;
 		}
-		if (strcmp(t-children[i]->tag, "regex") == 0) {
+		if (strcmp(t->children[i]->tag, "regex") == 0) {
 			continue;
 		}
 		x = lval_add(x, lval_read(t->children[i]));
